@@ -80,9 +80,7 @@ func (t *V1WorkflowRunsService) V1WorkflowRunCreate(ctx echo.Context, request ge
 					apierrors.NewAPIErrors(e.Message()),
 				), nil
 			case codes.ResourceExhausted:
-				return gen.V1WorkflowRunCreate400JSONResponse(
-					apierrors.NewAPIErrors(e.Message()),
-				), nil
+				return tooManyRequests(e.Message()), nil
 			}
 		}
 
