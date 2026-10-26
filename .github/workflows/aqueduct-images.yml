@@ -21,7 +21,7 @@ jobs:
         with:
           go-version-file: go.mod
       - name: Aqueduct patch tests
-        run: go test ./api/v1/server/handlers/v1/workflow-runs/ -run ResourceExhausted -v
+        run: go test ./api/v1/server/handlers/v1/workflow-runs/ -run 'ResourceExhausted|AqueductPacing' -v
 
   image:
     needs: test

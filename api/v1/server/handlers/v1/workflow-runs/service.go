@@ -14,6 +14,7 @@ type V1WorkflowRunsService struct {
 	config                 *server.ServerConfig
 	proxyTrigger           *proxy.Proxy[admincontracts.TriggerWorkflowRunRequest, admincontracts.TriggerWorkflowRunResponse]
 	proxyBranchDurableTask *proxy.Proxy[admincontracts.BranchDurableTaskRequest, admincontracts.BranchDurableTaskResponse]
+	pacer                  *pacer // Aqueduct patch 2; nil unless AQUEDUCT_PACING_ENABLED=true
 }
 
 func NewV1WorkflowRunsService(config *server.ServerConfig) *V1WorkflowRunsService {
@@ -25,9 +26,14 @@ func NewV1WorkflowRunsService(config *server.ServerConfig) *V1WorkflowRunsServic
 		return cli.Admin().BranchDurableTask(ctx, in)
 	})
 
-	return &V1WorkflowRunsService{
+	svc := &V1WorkflowRunsService{
 		config:                 config,
 		proxyTrigger:           proxyTrigger,
 		proxyBranchDurableTask: proxyBranchDurableTask,
 	}
+	if cfg := pacingConfigFromEnv(); cfg.enabled && config.Layer != nil && config.Pool != nil {
+		svc.pacer = newPacer(cfg, poolDepth(config.Pool))
+	}
+
+	return svc
 }

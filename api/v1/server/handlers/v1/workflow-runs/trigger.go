@@ -25,6 +25,11 @@ func (t *V1WorkflowRunsService) V1WorkflowRunCreate(ctx echo.Context, request ge
 	tenant := ctx.Get("tenant").(*sqlcv1.Tenant)
 	tenantId := tenant.ID
 
+	if t.pacer != nil { // Aqueduct patch 2
+		rate := t.pacer.rate(ctx.Request().Context(), tenantId)
+		t.pacer.setHeaders(ctx.Response().Header(), rate, ctx.Request().Header.Get("X-Aqueduct-Active-Queues"))
+	}
+
 	// make sure input can be marshalled and unmarshalled to input type
 	inputBytes, err := json.Marshal(request.Body.Input)
 
